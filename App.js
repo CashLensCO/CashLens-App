@@ -1,21 +1,19 @@
-import { StatusBar } from 'expo-status-bar';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StatusBar, LogBox } from 'react-native';
+import { CameraScreen } from './src/components/CameraScreen';
+
+// Ignorar warnings conocidos de dependencias nativas
+LogBox.ignoreLogs([
+	'new NativeEventEmitter',
+	'Module RNSound',
+	'Sending `onAnimatedValueUpdate`',
+]);
 
 export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
+	return (
+		<>
+			<StatusBar barStyle="light-content" backgroundColor="#000" />
+			<CameraScreen />
+		</>
+	);
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
