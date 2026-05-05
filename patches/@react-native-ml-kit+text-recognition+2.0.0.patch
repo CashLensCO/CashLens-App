@@ -1,0 +1,86 @@
+diff --git a/node_modules/@react-native-ml-kit/text-recognition/android/build.gradle b/node_modules/@react-native-ml-kit/text-recognition/android/build.gradle
+index 6a2e36f..a21e4f8 100644
+--- a/node_modules/@react-native-ml-kit/text-recognition/android/build.gradle
++++ b/node_modules/@react-native-ml-kit/text-recognition/android/build.gradle
+@@ -30,6 +30,7 @@ buildscript {
+ }
+ 
+ android {
++    namespace 'com.rnmlkit.textrecognition'
+     compileSdkVersion safeExtGet('compileSdkVersion', DEFAULT_COMPILE_SDK_VERSION)
+     buildToolsVersion safeExtGet('buildToolsVersion', DEFAULT_BUILD_TOOLS_VERSION)
+     defaultConfig {
+@@ -59,16 +60,9 @@ repositories {
+ }
+ 
+ dependencies {
+-    //noinspection GradleDynamicVersion
+-    implementation 'com.facebook.react:react-native:+'  // From node_modules
+-    // To recognize Latin script
++    // En RN 0.71+ el artefacto es 'com.facebook.react:react-android', y la
++    // versión la inyecta el plugin Gradle de RN.
++    implementation 'com.facebook.react:react-android'
++    // Solo necesitamos Latin para CashLens (dígitos impresos en monedas CO).
+     implementation 'com.google.mlkit:text-recognition:16.0.1'
+-    // To recognize Chinese script
+-    implementation 'com.google.mlkit:text-recognition-chinese:16.0.1'
+-    // To recognize Devanagari script
+-    implementation 'com.google.mlkit:text-recognition-devanagari:16.0.1'
+-    // To recognize Japanese script
+-    implementation 'com.google.mlkit:text-recognition-japanese:16.0.1'
+-    // To recognize Korean script
+-    implementation 'com.google.mlkit:text-recognition-korean:16.0.1'
+ }
+diff --git a/node_modules/@react-native-ml-kit/text-recognition/android/src/main/AndroidManifest.xml b/node_modules/@react-native-ml-kit/text-recognition/android/src/main/AndroidManifest.xml
+index a088559..35c4548 100644
+--- a/node_modules/@react-native-ml-kit/text-recognition/android/src/main/AndroidManifest.xml
++++ b/node_modules/@react-native-ml-kit/text-recognition/android/src/main/AndroidManifest.xml
+@@ -1,6 +1,5 @@
+ <!-- AndroidManifest.xml -->
+ 
+-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+-          package="com.rnmlkit.textrecognition">
++<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+ 
+ </manifest>
+diff --git a/node_modules/@react-native-ml-kit/text-recognition/android/src/main/java/com/rnmlkit/textrecognition/TextRecognitionModule.java b/node_modules/@react-native-ml-kit/text-recognition/android/src/main/java/com/rnmlkit/textrecognition/TextRecognitionModule.java
+index 004bfb3..7634c96 100644
+--- a/node_modules/@react-native-ml-kit/text-recognition/android/src/main/java/com/rnmlkit/textrecognition/TextRecognitionModule.java
++++ b/node_modules/@react-native-ml-kit/text-recognition/android/src/main/java/com/rnmlkit/textrecognition/TextRecognitionModule.java
+@@ -25,10 +25,6 @@ import com.google.mlkit.vision.text.Text;
+ import com.google.mlkit.vision.text.TextRecognition;
+ import com.google.mlkit.vision.text.TextRecognizer;
+ import com.google.mlkit.vision.text.TextRecognizerOptionsInterface;
+-import com.google.mlkit.vision.text.chinese.ChineseTextRecognizerOptions;
+-import com.google.mlkit.vision.text.devanagari.DevanagariTextRecognizerOptions;
+-import com.google.mlkit.vision.text.japanese.JapaneseTextRecognizerOptions;
+-import com.google.mlkit.vision.text.korean.KoreanTextRecognizerOptions;
+ import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
+ 
+ import java.io.IOException;
+@@ -140,22 +136,9 @@ public class TextRecognitionModule extends ReactContextBaseJavaModule {
+ 
+     @NonNull
+     TextRecognizerOptionsInterface getScriptTextRecognizerOptions(@Nullable String script) {
+-        if (script == null) {
+-            return TextRecognizerOptions.DEFAULT_OPTIONS;
+-        }
+-
+-        switch (script) {
+-            case "Chinese":
+-                return new ChineseTextRecognizerOptions.Builder().build();
+-            case "Devanagari":
+-                return new DevanagariTextRecognizerOptions.Builder().build();
+-            case "Japanese":
+-                return new JapaneseTextRecognizerOptions.Builder().build();
+-            case "Korean":
+-                return new KoreanTextRecognizerOptions.Builder().build();
+-            default:
+-                return TextRecognizerOptions.DEFAULT_OPTIONS;
+-        }
++        // CashLens solo usa Latin (dígitos de monedas). Resto eliminado para
++        // no arrastrar dependencias extra de ML Kit.
++        return TextRecognizerOptions.DEFAULT_OPTIONS;
+     }
+ 
+     @ReactMethod

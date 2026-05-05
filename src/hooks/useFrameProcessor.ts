@@ -3,14 +3,15 @@ import { runAtTargetFps, useFrameProcessor } from 'react-native-vision-camera';
 import { useRunOnJS, useSharedValue } from 'react-native-worklets-core';
 import { useResizePlugin } from 'vision-camera-resize-plugin';
 import type { TensorflowModel } from 'react-native-fast-tflite';
-import { SHAPE_LABELS, COIN_LABELS, BILL_LABELS } from '../utils/labels';
+import { SHAPE_LABELS, BILL_LABELS } from '../utils/labels';
 import { smoothDetection, DetectionResult } from '../utils/smoothing';
 
 const INFERENCE_FPS = 3;
 const COIN_SHAPE_THRESHOLD = 0.93;
 const BILL_SHAPE_THRESHOLD = 0.3;
-const COIN_DENOM_THRESHOLD = 0.28;
-const BILL_DENOM_THRESHOLD = 0.3;
+// Por debajo de este umbral consideramos la denominación "incierta" y
+// emitimos un estado de retry para pedirle al usuario reintentar.
+const RETRY_DENOM_THRESHOLD = 0.15;
 const OOM_BACKOFF_MS = 1200;
 const ERROR_LOG_INTERVAL_MS = 2000;
 const SHAPE_BILL_INDEX = SHAPE_LABELS.indexOf('bill');
@@ -139,7 +140,9 @@ function argmax(arr: ArrayLike<number>): number {
 
 export function useCameraFrameProcessor(
   shapeModel: TensorflowModel | undefined,
-  coinsModel: TensorflowModel | undefined,
+  // coinsModel ya no se usa: OCR (ML Kit) reemplaza al TFLite para monedas.
+  // Se mantiene en la firma para no romper el llamado desde CameraScreen.
+  _coinsModel: TensorflowModel | undefined,
   billsModel: TensorflowModel | undefined,
   onResult: (result: DetectionResult) => void,
   onFps: (fps: number) => void,
@@ -147,7 +150,6 @@ export function useCameraFrameProcessor(
   const { resize } = useResizePlugin();
 
   const shapeInputConfig = useMemo(() => getModelInputConfig(shapeModel), [shapeModel]);
-  const coinsInputConfig = useMemo(() => getModelInputConfig(coinsModel), [coinsModel]);
   const billsInputConfig = useMemo(() => getModelInputConfig(billsModel), [billsModel]);
 
   const processedCount = useSharedValue(0);
@@ -169,8 +171,8 @@ export function useCameraFrameProcessor(
   const frameProcessor = useFrameProcessor((frame) => {
     'worklet';
 
-    if (!shapeModel || !coinsModel || !billsModel) return;
-    if (!shapeInputConfig || !coinsInputConfig || !billsInputConfig) return;
+    if (!shapeModel || !billsModel) return;
+    if (!shapeInputConfig || !billsInputConfig) return;
 
     const now = Date.now();
     if (now < oomCooldownUntil.value) return;
@@ -218,35 +220,14 @@ export function useCameraFrameProcessor(
           coinShapeConf >= billShapeConf ? 'coin' : 'bill';
 
         if (targetType === 'coin' && coinEligible) {
-          const coinInput =
-            coinsInputConfig.width === shapeInputConfig.width &&
-            coinsInputConfig.height === shapeInputConfig.height &&
-            coinsInputConfig.dataType === shapeInputConfig.dataType
-              ? shapeInput
-              : resize(frame, {
-                  scale: {
-                    width: coinsInputConfig.width,
-                    height: coinsInputConfig.height,
-                  },
-                  pixelFormat: 'rgb',
-                  dataType: coinsInputConfig.dataType,
-                });
-
-          const coinOutput = coinsModel.runSync([coinInput]);
-          const coinScores = coinOutput[0] as Float32Array;
-          const coinProbs = toProbabilities(coinScores);
-          const coinIdx = argmax(coinProbs);
-          const coinConf = coinProbs[coinIdx] ?? 0;
-
-          if (coinConf < COIN_DENOM_THRESHOLD) {
-            runOnResult({ type: 'none', label: '', confidence: 0 });
-            return;
-          }
-
+          // Delegamos la denominación de monedas al pipeline de OCR (ML Kit)
+          // en CameraScreen: con shape confiable ya sabemos que hay una
+          // moneda en frame; OCR lee el número impreso, que es mucho más
+          // robusto que el modelo TFLite para monedas colombianas.
           runOnResult({
-            type: 'coin',
-            label: COIN_LABELS[coinIdx],
-            confidence: coinConf,
+            type: 'coin_analyzing',
+            label: '',
+            confidence: coinShapeConf,
           });
           return;
         }
@@ -272,8 +253,8 @@ export function useCameraFrameProcessor(
           const billIdx = argmax(billProbs);
           const billConf = billProbs[billIdx] ?? 0;
 
-          if (billConf < BILL_DENOM_THRESHOLD) {
-            runOnResult({ type: 'none', label: '', confidence: 0 });
+          if (billConf < RETRY_DENOM_THRESHOLD) {
+            runOnResult({ type: 'retry_bill', label: '', confidence: billConf });
             return;
           }
 
@@ -298,10 +279,8 @@ export function useCameraFrameProcessor(
     });
   }, [
     shapeModel,
-    coinsModel,
     billsModel,
     shapeInputConfig,
-    coinsInputConfig,
     billsInputConfig,
     resize,
     runOnResult,

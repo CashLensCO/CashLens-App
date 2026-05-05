@@ -3,7 +3,14 @@
 // solo si supera el umbral de confianza
 
 export interface DetectionResult {
-  type: 'coin' | 'bill' | 'none';
+  type:
+    | 'coin'
+    | 'bill'
+    | 'none'
+    | 'retry_coin'
+    | 'retry_bill'
+    | 'coin_analyzing'
+    | 'change_coin';
   label: string;
   confidence: number;
 }
@@ -14,6 +21,17 @@ const CONFIDENCE_THRESHOLD = 0.67;
 const window: DetectionResult[] = [];
 
 export function smoothDetection(result: DetectionResult): DetectionResult {
+  // Los estados de retry / análisis son feedback inmediato para el usuario:
+  // no los suavizamos, los pasamos tal cual y el throttle del audio evita spam.
+  if (
+    result.type === 'retry_coin' ||
+    result.type === 'retry_bill' ||
+    result.type === 'coin_analyzing' ||
+    result.type === 'change_coin'
+  ) {
+    return result;
+  }
+
   window.push(result);
   if (window.length > WINDOW_SIZE) {
     window.shift();
@@ -26,7 +44,14 @@ export function smoothDetection(result: DetectionResult): DetectionResult {
   // Contar frecuencia de cada label
   const counts: Record<string, number> = {};
   for (const r of window) {
-    if (r.type === 'none') continue;
+    if (
+      r.type === 'none' ||
+      r.type === 'retry_coin' ||
+      r.type === 'retry_bill' ||
+      r.type === 'coin_analyzing' ||
+      r.type === 'change_coin'
+    )
+      continue;
     const key = `${r.type}:${r.label}`;
     counts[key] = (counts[key] || 0) + 1;
   }

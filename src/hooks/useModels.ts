@@ -6,7 +6,7 @@ export function useModels() {
     require('../../assets/ml/shape_detector.tflite')
   );
   const coinsModel = useTensorflowModel(
-    require('../../assets/ml/coins_v1.tflite')
+    require('../../assets/ml/coins_v2.tflite')
   );
   const billsModel = useTensorflowModel(
     require('../../assets/ml/bills_v1.tflite')

@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cmd //c \"dir /al C:\\\\CashLens\\\\CashLens-App\\\\node_modules 2>&1 | findstr /i onedrive reanimated\")",
+      "Bash(cmd //c \"dir /al C:\\\\CashLens\\\\CashLens-App 2>&1\")",
+      "Bash(cmd //c \"dir /al C:\\\\CashLens\\\\CashLens-App\\\\node_modules\")",
+      "Bash(cmd //c \"fsutil reparsepoint query C:\\\\CashLens\\\\CashLens-App\\\\node_modules\\\\react-native-reanimated\")",
+      "Bash(cmd //c \"if exist C:\\\\Users\\\\juanp\\\\OneDrive\\\\Escritorio\\\\CashLens\\\\CashLens-App\\\\node_modules\\\\react-native-reanimated\\\\android\\\\build echo EXISTS_ONEDRIVE_BUILD & if exist C:\\\\CashLens\\\\CashLens-App\\\\node_modules\\\\react-native-reanimated\\\\android\\\\build echo EXISTS_LOCAL_BUILD\")",
+      "Bash(node -e \"console.log\\(require.resolve\\('react-native-vision-camera/package.json'\\)\\)\")",
+      "Bash(npx --no-install expo-modules-autolinking resolve -p android --json)",
+      "Bash(node -e \"const config = require\\('@react-native/community-cli-plugin'\\); console.log\\('ok'\\)\")",
+      "Bash(node -e \"console.log\\(require.resolve\\('react-native-reanimated/package.json'\\)\\)\")",
+      "Bash(npx --no-install react-native config)",
+      "Bash(npx --no-install expo config --type public)",
+      "Bash(npx --no-install expo-modules-autolinking react-native-config -p android --json)",
+      "Bash(./gradlew.bat --stop)",
+      "Bash(cmd //c \"if exist \\\\\"C:\\\\Users\\\\juanp\\\\OneDrive\\\\Escritorio\\\\CashLens\\\\CashLens-App\\\\\" \\(echo ONEDRIVE_COPY_EXISTS\\) else \\(echo ONEDRIVE_COPY_MISSING\\)\")",
+      "Bash(node -e \"const RN = require\\('react-native'\\); console.log\\('Image.resolveAssetSource:', typeof RN.Image?.resolveAssetSource\\); console.log\\('top-level:', typeof RN.resolveAssetSource\\);\")",
+      "Bash(ls /c/CashLens/CashLens-App/node_modules/react-native/Libraries/Image/resolveAssetSource*)",
+      "Bash(npm install:*)",
+      "Bash(npx patch-package:*)",
+      "Bash(ls /c/CashLens/CashLens-App/*.js /c/CashLens/CashLens-App/*.tsx /c/CashLens/CashLens-App/*.ts)",
+      "Bash(find /c/CashLens/CashLens-App/node_modules/@react-native-ml-kit/text-recognition/android -name \"AndroidManifest.xml\" -exec cat {} \\\\;)",
+      "Read(//c/Users/juanp/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/e5048d31-5a31-460a-b8e2-5502a510770a/b33735de-1323-41d1-abfd-f4e16424b7a2/skills/docx/**)",
+      "Bash(npm list *)",
+      "Bash(findstr docx *)",
+      "Bash(node gen_informe.js)",
+      "Bash(npm root *)",
+      "Bash(NODE_PATH=\"C:/Users/juanp/AppData/Roaming/npm/node_modules\" node gen_informe.js)",
+      "Bash(python /c/Users/juanp/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/e5048d31-5a31-460a-b8e2-5502a510770a/b33735de-1323-41d1-abfd-f4e16424b7a2/skills/docx/scripts/office/validate.py /c/CashLens/Informe_CashLens.docx)"
+    ]
+  }
+}
